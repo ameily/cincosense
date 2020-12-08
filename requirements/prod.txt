@@ -2,3 +2,4 @@ kivy==1.11.1
 pyyaml
 speedtest-cli
 cincoconfig
+dnspython
