@@ -11,6 +11,7 @@ from typing import List
 
 from kivy.uix.boxlayout import BoxLayout
 from kivy.clock import Clock
+from kivy.event import EventDispatcher
 from kivy.logger import Logger
 from dns.resolver import Resolver
 
@@ -19,10 +20,11 @@ from .ping import ping
 from .config import config
 
 
-class ConnectionPanel(BoxLayout):
+class ConnectionPanel(BoxLayout, EventDispatcher):
 
     def __init__(self, **kwargs):
-        super().__init__(orientation='horizontal', **kwargs)
+        BoxLayout.__init__(self, orientation='horizontal', **kwargs)
+        EventDispatcher.__init__(self)
         # ping local gateway - bolt
         # ping external gateway - external-link
         # dns query, icanhazip - person
@@ -38,9 +40,15 @@ class ConnectionPanel(BoxLayout):
         self.add_widget(self.external_dns_sensor)
         self.add_widget(self.local_dns_sensor)
 
-        Clock.schedule_once(lambda dt: self.run_sensors(), 5.0)
+        self.register_event_type('on_sensor_done')
 
-    def run_sensors(self):
+    def run_sensors(self, reset: bool = False):
+        if reset:
+            self.local_gateway_sensor.mark_unknown(True)
+            self.external_gateway_sensor.mark_unknown(True)
+            self.external_dns_sensor.mark_unknown(True)
+            self.local_dns_sensor.mark_unknown(True)
+
         thread = threading.Thread(target=self._run_sensors)
         thread.start()
 
@@ -91,7 +99,12 @@ class ConnectionPanel(BoxLayout):
 
         Logger.info('Connection: internal dns query successful')
         self.local_dns_sensor.mark_good()
+        self.dispatch('on_sensor_done')
 
     def mark_bad(self, *sensors: List[BoolSensor]) -> None:
         for sensor in sensors:
             sensor.mark_bad()
+        self.dispatch('on_sensor_done')
+
+    def on_sensor_done(self):
+        pass

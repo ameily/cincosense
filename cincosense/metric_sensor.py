@@ -56,3 +56,9 @@ class MetricSensor(BoxLayout):
         self.label.color = self.image.color = fg
         self.color.rgba = bg
         self.image.source = self.image_path
+
+    def mark_unknown(self):
+        self.label.color = self.image.color = style.UNKNOWN_FG
+        self.color.rgba = style.UNKNOWN_BG
+        self.image.source = style.UNKNOWN_IMAGE
+        self.label.text = f'{self.text}\n...'

@@ -15,6 +15,7 @@ from typing import List
 from kivy.uix.boxlayout import BoxLayout
 from kivy.clock import Clock
 from kivy.logger import Logger
+from kivy.event import EventDispatcher
 from dns.resolver import Resolver
 
 from .bool_sensor import BoolSensor
@@ -23,10 +24,11 @@ from .ping import ping
 from .config import config
 
 
-class SpeedPanel(BoxLayout):
+class SpeedPanel(BoxLayout, EventDispatcher):
 
     def __init__(self, **kwargs):
-        super().__init__(orientation='horizontal', **kwargs)
+        BoxLayout.__init__(self, orientation='horizontal', **kwargs)
+        EventDispatcher.__init__(self)
         # ping local gateway - bolt
         # ping external gateway - external-link
         # dns query, icanhazip - person
@@ -41,9 +43,15 @@ class SpeedPanel(BoxLayout):
         self.add_widget(self.download)
         self.add_widget(self.upload)
 
-        Clock.schedule_once(lambda dt: self.run_sensors(), 5.0)
+        self.register_event_type('on_sensor_done')
 
-    def run_sensors(self):
+    def run_sensors(self, reset: bool = False):
+        if reset:
+            self.external_ip_sensor.mark_unknown(True)
+            self.latency.mark_unknown()
+            self.download.mark_unknown()
+            self.upload.mark_unknown()
+
         thread = threading.Thread(target=self._run_sensors)
         thread.start()
 
@@ -57,6 +65,7 @@ class SpeedPanel(BoxLayout):
         except OSError:
             Logger.exception('Connection: remote TCP connection failed')
             # self.mark_bad(self.external_ip_sensor)
+            self.dispatch('on_sensor_done')
             return
 
         Logger.info('Connection: remote TCP connection successful')
@@ -67,12 +76,15 @@ class SpeedPanel(BoxLayout):
         Logger.info('Speed: running speed test')
         try:
             content = subprocess.check_output(['speedtest-cli', '--json'])
+            # content = b'{"ping": 79.2, "download": 104857600, "upload": 20971520}'
         except subprocess.CalledProcessError:
             Logger.exception('speedtest-cli failed')
+            self.dispatch('on_sensor_done')
             return
 
         result = json.loads(content.decode().strip())
         Clock.schedule_once(partial(self.set_result, result))
+        self.dispatch('on_sensor_done')
 
     def set_result(self, result, dt: int = None) -> None:
         latency = result['ping']
@@ -84,3 +96,6 @@ class SpeedPanel(BoxLayout):
         self.upload.set_value(f'{upload:.1f}mb/s', upload / config.upload_mbps)
 
         Logger.info('Speed: results: latency=%.0fms, download=%.1fmb/s, upload=%.1fmb/s', latency, download, upload)
+
+    def on_sensor_done(self):
+        pass

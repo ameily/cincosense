@@ -66,8 +66,9 @@ class BoolSensor(BoxLayout):
             image_path = style.DANGER_IMAGE
         elif state == 'unknown':
             fg, bg = style.UNKNOWN_FG, style.UNKNOWN_BG
-            image = style.UNKNOWN_IMAGE
+            image_path = style.UNKNOWN_IMAGE
 
         self.color.rgba = bg
         self.label.color = self.image.color = fg
         self.image.source = image_path
+        self.state = state
