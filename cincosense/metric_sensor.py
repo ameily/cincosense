@@ -22,7 +22,7 @@ class MetricSensor(BoxLayout):
         super().__init__(orientation='vertical', **kwargs)
         self.text = text
         self.image_path = style.locate_image(image)
-        self.label = Label(text=f'{text}\n...', color=style.UNKNOWN_FG, halign='center')
+        self.label = Label(text=f'{text}\n...', color=style.UNKNOWN_FG, halign='center', markup=True)
         self.image = Image(source=style.UNKNOWN_IMAGE)
         # self.value = Label(text='...', color=style.UNKNOWN_FG)
         self.add_widget(self.image)
@@ -45,7 +45,7 @@ class MetricSensor(BoxLayout):
         if percent < 0.0:
             percent = 0.0
 
-        self.label.text = f'{value}\n{percent:.0%}\n{self.text}'
+        self.label.text = f'[b][size=20]{value}[/size][/b]\n{self.text}'
         if percent >= 0.9:
             fg, bg = style.SUCCESS_FG, style.SUCCESS_BG
         elif percent >= 0.70:

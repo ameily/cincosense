@@ -44,6 +44,7 @@ class SpeedPanel(BoxLayout, EventDispatcher):
         self.add_widget(self.upload)
 
         self.register_event_type('on_sensor_done')
+        self.state = 'unknown'
 
     def run_sensors(self, reset: bool = False):
         if reset:
@@ -58,13 +59,16 @@ class SpeedPanel(BoxLayout, EventDispatcher):
     def _run_sensors(self):
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         try:
-            sock.connect(('icanhazip.com.', 80))
+            ip = socket.gethostbyname('icanhazip.com.')
+            print('IP:', ip)
+            sock.connect((ip, 80))
             sock.sendall(b'GET / HTTP/1.1\r\nHost: icanhazip.com\r\n\r\n')
             data = sock.recv(1024)
             sock.close()
         except OSError:
             Logger.exception('Connection: remote TCP connection failed')
-            # self.mark_bad(self.external_ip_sensor)
+            self.state = 'failed'
+            self.external_ip_sensor.mark_bad(immediate=False)
             self.dispatch('on_sensor_done')
             return
 
@@ -83,6 +87,7 @@ class SpeedPanel(BoxLayout, EventDispatcher):
             return
 
         result = json.loads(content.decode().strip())
+        self.state = 'good'
         Clock.schedule_once(partial(self.set_result, result))
         self.dispatch('on_sensor_done')
 

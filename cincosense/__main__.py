@@ -21,6 +21,7 @@ from .connection_panel import ConnectionPanel
 from .speed_panel import SpeedPanel
 from .icon_button import IconButton
 from .btnbar import ButtonBar
+from .statusbar import StatusBar
 from . import style
 from .config import config
 
@@ -52,19 +53,24 @@ class MyApp(App):
         self.last_connection_update = None
         self.last_speed_update = None
 
-        self.run_sensors()
+        self.update_interval = Clock.schedule_interval(self.schedule_update, 5)
 
-        self.update_interval = Clock.schedule_interval(self.schedule_update, 10)
+        self.status_bar = StatusBar(size_hint=(1, None), height=16)
+        vbox.add_widget(self.status_bar)
+
+        self.run_sensors()
 
         return hbox
 
     def run_sensors(self, connection: bool = True, speed: bool = True, reset: bool = False):
         self.btn_bar.reload.disabled = True
         if connection:
+            self.status_bar.connection_update = 'Running'
             self.connection_panel.run_sensors(reset=reset)
             self.running_sensors += 1
 
         if speed:
+            self.status_bar.speed_update = 'Running'
             self.speed_panel.run_sensors(reset=reset)
             self.running_sensors += 1
 
@@ -72,25 +78,29 @@ class MyApp(App):
         self.running_sensors -= 1
         if self.running_sensors == 0:
             self.btn_bar.reload.disabled = False
-            self.last_completion_time = datetime.now()
 
     def on_connection_sensor_done(self, target):
         self.on_sensor_done()
         self.last_connection_update = datetime.now()
+        self.status_bar.connection_update = self.last_connection_update.strftime('%I:%M:%S %p')
 
     def on_speed_sensor_done(self, target):
         self.on_sensor_done()
         self.last_speed_update = datetime.now()
+        self.status_bar.speed_update = self.last_speed_update.strftime('%I:%M:%S %p')
 
     def schedule_update(self, dt):
         if self.running_sensors:
             return
 
-        delta = (datetime.now() - self.last_connection_update).total_seconds()
-        connection = delta < 0 or delta > config.connection_update_interval
-
         delta = (datetime.now() - self.last_speed_update).total_seconds()
-        speed = delta < 0 or delta > config.speed_update_interval
+        # or not self.speed_panel.is_good()
+        speed = (delta < 0 or delta >= config.speed_update_interval or
+                 self.speed_panel.state != 'good')
+
+        delta = (datetime.now() - self.last_connection_update).total_seconds()
+        connection = (delta < 0 or delta >= config.connection_update_interval
+                      or self.speed_panel.state != 'good' or speed)
 
         if not connection and not speed:
             return

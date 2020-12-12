@@ -41,6 +41,7 @@ class ConnectionPanel(BoxLayout, EventDispatcher):
         self.add_widget(self.local_dns_sensor)
 
         self.register_event_type('on_sensor_done')
+        self.state = 'unknown'
 
     def run_sensors(self, reset: bool = False):
         if reset:
@@ -99,11 +100,13 @@ class ConnectionPanel(BoxLayout, EventDispatcher):
 
         Logger.info('Connection: internal dns query successful')
         self.local_dns_sensor.mark_good()
+        self.state = 'good'
         self.dispatch('on_sensor_done')
 
     def mark_bad(self, *sensors: List[BoolSensor]) -> None:
         for sensor in sensors:
             sensor.mark_bad()
+        self.state = 'failed'
         self.dispatch('on_sensor_done')
 
     def on_sensor_done(self):
