@@ -48,7 +48,7 @@ class SpeedPanel(BoxLayout, EventDispatcher):
 
     def run_sensors(self, reset: bool = False):
         if reset:
-            self.external_ip_sensor.mark_unknown(True)
+            self.external_ip_sensor.state = 'unknown'
             self.latency.mark_unknown()
             self.download.mark_unknown()
             self.upload.mark_unknown()
@@ -68,14 +68,14 @@ class SpeedPanel(BoxLayout, EventDispatcher):
         except OSError:
             Logger.exception('Connection: remote TCP connection failed')
             self.state = 'failed'
-            self.external_ip_sensor.mark_bad(immediate=False)
+            self.external_ip_sensor.state = 'bad'
             self.dispatch('on_sensor_done')
             return
 
         Logger.info('Connection: remote TCP connection successful')
         myip = data[data.index(b'\r\n\r\n'):].decode().strip()
         Logger.info('Connection: connectivity is good, my external IP address is: %s', myip)
-        self.external_ip_sensor.mark_good()
+        self.external_ip_sensor.state = 'good'
 
         Logger.info('Speed: running speed test')
         try:

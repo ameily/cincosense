@@ -1,3 +1,9 @@
+#
+# Copyright (C) 2020 Adam Meily
+#
+# This file is subject to the terms and conditions defined in the file 'LICENSE', which is part of
+# this source code package.
+#
 from kivy.uix.image import Image
 from kivy.uix.button import Button
 

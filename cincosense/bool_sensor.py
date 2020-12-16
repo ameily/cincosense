@@ -5,17 +5,21 @@
 # this source code package.
 #
 from functools import partial
+from enum import Enum
 
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.label import Label
 from kivy.uix.image import Image
 from kivy.clock import Clock
 from kivy.graphics import Color, Rectangle
+from kivy.properties import StringProperty
 
 from . import style
+from .util import only_main_thread
 
 
 class BoolSensor(BoxLayout):
+    state = StringProperty('unknown')
 
     def __init__(self, text: str, image: str, **kwargs):
         super().__init__(orientation='vertical', **kwargs)
@@ -32,32 +36,12 @@ class BoolSensor(BoxLayout):
         self.bind(pos=self._update_rect, size=self._update_rect)
         self.state = 'unknown'
 
-    def _update_rect(self, *args):
+    def _update_rect(self, *args) -> None:
         self.rect.size = self.size
         self.rect.pos = self.pos
 
-    def mark_good(self, immediate: bool = False):
-        if immediate:
-            self._mark('good')
-        else:
-            Clock.schedule_once(partial(self._mark, 'good'))
-
-    def mark_bad(self, immediate: bool = False):
-        if immediate:
-            self._mark('bad')
-        else:
-            Clock.schedule_once(partial(self._mark, 'bad'))
-
-    def mark_unknown(self, immediate: bool = False) -> None:
-        if immediate:
-            self._mark('unknown')
-        else:
-            Clock.schedule_once(partial(self._mark, 'unknown'))
-
-    def _mark(self, state: str, dt: int = None) -> None:
-        if self.state == state:
-            return
-
+    @only_main_thread
+    def on_state(self, instance, state: str) -> None:
         if state == 'good':
             fg, bg = style.SUCCESS_FG, style.SUCCESS_BG
             image_path = self.image_path
@@ -67,8 +51,9 @@ class BoolSensor(BoxLayout):
         elif state == 'unknown':
             fg, bg = style.UNKNOWN_FG, style.UNKNOWN_BG
             image_path = style.UNKNOWN_IMAGE
+        else:
+            return
 
         self.color.rgba = bg
         self.label.color = self.image.color = fg
         self.image.source = image_path
-        self.state = state

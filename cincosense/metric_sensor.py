@@ -24,10 +24,8 @@ class MetricSensor(BoxLayout):
         self.image_path = style.locate_image(image)
         self.label = Label(text=f'{text}\n...', color=style.UNKNOWN_FG, halign='center', markup=True)
         self.image = Image(source=style.UNKNOWN_IMAGE)
-        # self.value = Label(text='...', color=style.UNKNOWN_FG)
         self.add_widget(self.image)
         self.add_widget(self.label)
-        # self.add_widget(self.value)
 
         with self.canvas.before:
             self.color = Color(*style.UNKNOWN_BG)
@@ -40,8 +38,6 @@ class MetricSensor(BoxLayout):
         self.rect.pos = self.pos
 
     def set_value(self, value: str, percent: float) -> None:
-        # if percent > 1.0:
-        #     percent = 1.0
         if percent < 0.0:
             percent = 0.0
 

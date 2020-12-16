@@ -1,4 +1,9 @@
-
+#
+# Copyright (C) 2020 Adam Meily
+#
+# This file is subject to the terms and conditions defined in the file 'LICENSE', which is part of
+# this source code package.
+#
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.label import Label
 from kivy.properties import StringProperty

@@ -24,14 +24,14 @@ from .btnbar import ButtonBar
 from .statusbar import StatusBar
 from . import style
 from .config import config
+from .util import wakeup_tty
 
 # logging.basicConfig(stream=sys.stderr, level=logging.INFO)
-Window.size = (800, 400)
+# Window.size = (800, 400)
 
 class MyApp(App):
 
     def build(self):
-        Logger.info('MyApp2: thing 1')
         hbox = BoxLayout(orientation='horizontal', spacing=5)
         vbox = BoxLayout(orientation='vertical', spacing=5)
 
@@ -58,7 +58,10 @@ class MyApp(App):
         self.status_bar = StatusBar(size_hint=(1, None), height=16)
         vbox.add_widget(self.status_bar)
 
-        self.run_sensors()
+        Clock.schedule_once(lambda dt: self.run_sensors())
+
+        if config.wakeup_tty:
+            wakeup_tty(config.wakeup_tty)
 
         return hbox
 
@@ -93,17 +96,19 @@ class MyApp(App):
         if self.running_sensors:
             return
 
+        good = self.speed_panel.state == 'good' and self.connection_panel.state == 'good'
         delta = (datetime.now() - self.last_speed_update).total_seconds()
         # or not self.speed_panel.is_good()
-        speed = (delta < 0 or delta >= config.speed_update_interval or
-                 self.speed_panel.state != 'good')
+        speed = delta < 0 or delta >= config.speed_update_interval or not good
 
         delta = (datetime.now() - self.last_connection_update).total_seconds()
-        connection = (delta < 0 or delta >= config.connection_update_interval
-                      or self.speed_panel.state != 'good' or speed)
+        connection = delta < 0 or delta >= config.connection_update_interval or not good or speed
 
         if not connection and not speed:
             return
+
+        if not good and config.wakeup_tty:
+            wakeup_tty(config.wakeup_tty)
 
         self.run_sensors(connection=connection, speed=speed)
 

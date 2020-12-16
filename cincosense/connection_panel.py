@@ -45,10 +45,10 @@ class ConnectionPanel(BoxLayout, EventDispatcher):
 
     def run_sensors(self, reset: bool = False):
         if reset:
-            self.local_gateway_sensor.mark_unknown(True)
-            self.external_gateway_sensor.mark_unknown(True)
-            self.external_dns_sensor.mark_unknown(True)
-            self.local_dns_sensor.mark_unknown(True)
+            self.local_gateway_sensor.state = 'unknown'
+            self.external_gateway_sensor.state = 'unknown'
+            self.external_dns_sensor.state = 'unknown'
+            self.local_dns_sensor.state = 'unknown'
 
         thread = threading.Thread(target=self._run_sensors)
         thread.start()
@@ -62,7 +62,7 @@ class ConnectionPanel(BoxLayout, EventDispatcher):
             return
 
         Logger.info('Connection: local gateway ping successful')
-        self.local_gateway_sensor.mark_good()
+        self.local_gateway_sensor.state = 'good'
 
         if not ping(config.external_gateway):
             Logger.info('Connection: external gateway ping failed')
@@ -71,7 +71,7 @@ class ConnectionPanel(BoxLayout, EventDispatcher):
             return
 
         Logger.info('Connection: external gateway ping successful')
-        self.external_gateway_sensor.mark_good()
+        self.external_gateway_sensor.state = 'good'
 
         resolver = Resolver(configure=False)
         resolver.nameservers = list(config.external_dns)
@@ -85,7 +85,7 @@ class ConnectionPanel(BoxLayout, EventDispatcher):
             return
 
         Logger.info('Connection: external dns query successful')
-        self.external_dns_sensor.mark_good()
+        self.external_dns_sensor.state = 'good'
 
         resolver = Resolver(configure=False)
         resolver.nameservers = list(config.local_dns)
@@ -99,13 +99,13 @@ class ConnectionPanel(BoxLayout, EventDispatcher):
             return
 
         Logger.info('Connection: internal dns query successful')
-        self.local_dns_sensor.mark_good()
+        self.local_dns_sensor.state = 'good'
         self.state = 'good'
         self.dispatch('on_sensor_done')
 
     def mark_bad(self, *sensors: List[BoolSensor]) -> None:
         for sensor in sensors:
-            sensor.mark_bad()
+            sensor.state = 'bad'
         self.state = 'failed'
         self.dispatch('on_sensor_done')
 

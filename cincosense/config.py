@@ -20,6 +20,7 @@ schema.upload_mbps = FloatField(required=True)
 schema.ideal_latency = FloatField(default=100.0)
 schema.connection_update_interval = IntField(default=30, required=True)
 schema.speed_update_interval = IntField(default=3600, required=True)
+schema.wakeup_tty = FilenameField(exists='file')
 
 config = schema()
 config.load(CONFIG_FILENAME, format='yaml')
