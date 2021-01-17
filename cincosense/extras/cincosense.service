@@ -1,0 +1,13 @@
+[Unit]
+Description=cincosense
+After=syslog.target network.target
+
+[Service]
+Type=simple
+User=cincosense
+WorkingDirectory=/opt/cincosense/cincosense
+ExecStart=/bin/bash -c "source ./venv/bin/activate;python -m cincosense"
+Restart=on-abort
+
+[Install]
+WantedBy=multi-user.target
