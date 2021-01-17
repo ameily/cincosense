@@ -62,6 +62,7 @@ class MyApp(App):
 
         if config.wakeup_tty:
             wakeup_tty(config.wakeup_tty)
+            Window.bind(on_touch_down=lambda wnd, touch: wakeup_tty(config.wakeup_tty))
 
         return hbox
 
