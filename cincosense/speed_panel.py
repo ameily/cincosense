@@ -79,7 +79,7 @@ class SpeedPanel(BoxLayout, EventDispatcher):
 
         Logger.info('Speed: running speed test')
         try:
-            content = subprocess.check_output(['speedtest-cli', '--json'])
+            content = subprocess.check_output(['speedtest-cli', '--json', '--secure'])
             # content = b'{"ping": 79.2, "download": 104857600, "upload": 20971520}'
         except subprocess.CalledProcessError:
             Logger.exception('speedtest-cli failed')
